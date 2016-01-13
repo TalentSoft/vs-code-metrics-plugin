@@ -8,25 +8,25 @@ import org.jenkinsci.plugins.vs_code_metrics.util.CodeMetricsUtil;
 import org.jenkinsci.plugins.vs_code_metrics.util.Constants;
 import org.kohsuke.stapler.StaplerProxy;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
+import hudson.model.Run;
 
 /**
  * @author Yasuyuki Saito
  */
 public class VsCodeMetricsBuildAction implements Action, StaplerProxy, HealthReportingAction {
 
-    private final AbstractBuild<?,?> build;
+    private final Run<?,?> run;
     private final VsCodeMetricsThresholds thresholds;
     private int maintainabilityIndex;
     private int cyclomaticComplexity;
     private boolean metricsValue;
     private transient WeakReference<CodeMetrics> resultRef = null;
 
-    public VsCodeMetricsBuildAction(AbstractBuild<?, ?> build, VsCodeMetricsThresholds thresholds) {
-        this.build      = build;
+    public VsCodeMetricsBuildAction(Run<?, ?> run, VsCodeMetricsThresholds thresholds) {
+        this.run      = run;
         this.thresholds = thresholds;
         setMetricsValue();
     }
@@ -59,13 +59,13 @@ public class VsCodeMetricsBuildAction implements Action, StaplerProxy, HealthRep
         return getReport();
     }
 
-    public AbstractBuild<?,?> getBuild() {
-        return build;
+    public Run<?,?> getBuild() {
+        return run;
     }
 
     private CodeMetricsReport getReport() {
         CodeMetrics result = getCodeMetrics();
-        return new CodeMetricsReport(build, result);
+        return new CodeMetricsReport(run, result);
     }
 
     public HealthReport getBuildHealth() {
@@ -95,7 +95,7 @@ public class VsCodeMetricsBuildAction implements Action, StaplerProxy, HealthRep
         }
 
         try {
-            result = CodeMetricsUtil.getCodeMetrics(build);
+            result = CodeMetricsUtil.getCodeMetrics(run);
             resultRef = new WeakReference<CodeMetrics>(result);
             return result;
         } catch (InterruptedException e) {

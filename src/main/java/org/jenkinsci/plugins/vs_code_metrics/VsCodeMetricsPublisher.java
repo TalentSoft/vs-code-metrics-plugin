@@ -17,15 +17,19 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 
+import jenkins.tasks.SimpleBuildStep;
+
 /**
  * @author Yasuyuki Saito
  */
-public class VsCodeMetricsPublisher extends Recorder {
+public class VsCodeMetricsPublisher extends Recorder implements SimpleBuildStep {
 
     private final String reportFiles;
     private final VsCodeMetricsThresholds thresholds;
@@ -64,35 +68,45 @@ public class VsCodeMetricsPublisher extends Recorder {
 
         if (StringUtil.isNullOrSpace(reportFiles)) return false;
 
-        final PrintStream logger = listener.getLogger();
         EnvVars env = build.getEnvironment(listener);
         env.overrideAll(build.getBuildVariables());
         String includes = env.expand(reportFiles);
 
+        performInternal(build, build.getWorkspace(), listener, includes);
+        
+        return true;
+    }
+    
+    @Override
+    public void perform(Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+        performInternal(run, filePath, listener, reportFiles);
+    }
+
+    private void performInternal(Run<?, ?> run, FilePath fp, TaskListener listener, String includes) throws InterruptedException, IOException {
+        final PrintStream logger = listener.getLogger();
+
         logger.println("Code Metrics Report path: " + includes);
-        FilePath[] reports = CodeMetricsUtil.locateReports(build.getWorkspace(), includes);
+        FilePath[] reports = CodeMetricsUtil.locateReports(fp, includes);
 
         if (reports.length == 0) {
-            if (build.getResult().isWorseThan(Result.UNSTABLE)) {
-                return true;
+            if (run.getResult().isWorseThan(Result.UNSTABLE)) {
+                return;
             }
 
             logger.println("Code Metrics Report Not Found.");
-            build.setResult((failBuild) ? Result.FAILURE : Result.UNSTABLE);
-            return true;
+            run.setResult((failBuild) ? Result.FAILURE : Result.UNSTABLE);
+            return;
         }
 
-        FilePath metricsFolder = new FilePath(CodeMetricsUtil.getReportDir(build));
+        FilePath metricsFolder = new FilePath(CodeMetricsUtil.getReportDir(run));
         if (!CodeMetricsUtil.saveReports(metricsFolder, reports)) {
             logger.println("Code Metrics Report Convert Error.");
-            build.setResult((failBuild) ? Result.FAILURE : Result.UNSTABLE);
-            return true;
+            run.setResult((failBuild) ? Result.FAILURE : Result.UNSTABLE);
+            return;
         }
 
-        VsCodeMetricsBuildAction action = new VsCodeMetricsBuildAction(build, thresholds);
-        build.getActions().add(action);
-
-        return true;
+        VsCodeMetricsBuildAction action = new VsCodeMetricsBuildAction(run, thresholds);
+        run.getActions().add(action);
     }
 
     public Action getProjectAction(AbstractProject<?, ?> project) {

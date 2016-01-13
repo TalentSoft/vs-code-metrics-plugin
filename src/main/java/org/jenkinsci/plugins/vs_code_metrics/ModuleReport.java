@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.vs_code_metrics;
 
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 import org.jenkinsci.plugins.vs_code_metrics.bean.Module;
 import org.jenkinsci.plugins.vs_code_metrics.bean.Namespace;
@@ -9,12 +9,12 @@ public final class ModuleReport extends AbstractReport {
 
    /**
     *
-    * @param build
+    * @param run
     * @param result
     * @param tokens
     */
-   public ModuleReport(AbstractBuild<?, ?> build, Module result) {
-       super(build, result.getName(), result);
+   public ModuleReport(Run<?, ?> run, Module result) {
+       super(run, result.getName(), result);
        setBuildTokens(getName(), null);
    }
 

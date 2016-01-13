@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.466</version>
+    <version>1.609.1</version>
   </parent>
 
   <artifactId>vs-code-metrics</artifactId>
@@ -33,7 +33,13 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
+    <dependencies>
+            <dependency>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-aggregator</artifactId>
+                    <version>1.12</version>
+            </dependency>
+    </dependencies>
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>

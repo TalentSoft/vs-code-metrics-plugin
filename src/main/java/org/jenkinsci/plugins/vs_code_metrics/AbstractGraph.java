@@ -18,7 +18,7 @@ import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.ui.RectangleInsets;
 
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.util.ColorPalette;
 import hudson.util.DataSetBuilder;
 import hudson.util.Graph;
@@ -27,14 +27,14 @@ import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 
 public abstract class AbstractGraph extends Graph {
 
-    private final AbstractBuild<?, ?> build;
+    private final Run<?, ?> run;
     private final String[] buildTokens;
     protected String valueKey = null;
     protected Integer upperBound = null;
 
-    public AbstractGraph(AbstractBuild<?, ?> build, String[] buildTokens, Calendar timestamp, int defaultW, int defaultH) {
+    public AbstractGraph(Run<?, ?> run, String[] buildTokens, Calendar timestamp, int defaultW, int defaultH) {
         super(timestamp, defaultW, defaultH);
-        this.build = build;
+        this.run = run;
         this.buildTokens = buildTokens;
     }
 
@@ -76,13 +76,14 @@ public abstract class AbstractGraph extends Graph {
     private CategoryDataset createDataset() {
         DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
 
-        AbstractBuild<?, ?> lastBuild = build;
+        Run<?, ?> lastBuild = run;
         while (lastBuild != null) {
             if (!lastBuild.isBuilding() && (lastBuild.getAction(VsCodeMetricsBuildAction.class) != null)) {
                 VsCodeMetricsBuildAction action = lastBuild.getAction(VsCodeMetricsBuildAction.class);
 
                 if ((buildTokens == null || buildTokens.length == 0) && action.isMetricsValue()) {
-                    NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(lastBuild);
+                    NumberOnlyBuildLabel buildLabel;
+                    buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)lastBuild);
                     builder.add(getValue(action), valueKey, buildLabel);
                 } else {
                     CodeMetrics metrics = action.getCodeMetrics();
@@ -90,7 +91,7 @@ public abstract class AbstractGraph extends Graph {
                         AbstractBean<?> bean = CodeMetricsUtil.searchBean(metrics, buildTokens);
 
                         if (bean != null) {
-                            NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(lastBuild);
+                            NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)lastBuild);
                             builder.add(getValue(bean), valueKey, buildLabel);
                         }
                     }

@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.vs_code_metrics;
 
-import hudson.model.AbstractBuild;
 import hudson.model.ModelObject;
+import hudson.model.Run;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -18,7 +18,7 @@ public abstract class AbstractReport implements Serializable, ModelObject {
 
     private static final long serialVersionUID = 1L;
 
-    private AbstractBuild<?,?> build;
+    private Run<?,?> run;
     private String name;
     private AbstractBean<?> result;
     private AbstractBean<?> previousResult;
@@ -28,18 +28,18 @@ public abstract class AbstractReport implements Serializable, ModelObject {
 
     /**
      *
-     * @param build
+     * @param run
      * @param name
      * @param result
      */
-    protected AbstractReport(AbstractBuild<?,?> build, String name, AbstractBean<?> result) {
-        this.build  = build;
+    protected AbstractReport(Run<?,?> run, String name, AbstractBean<?> result) {
+        this.run  = run;
         this.name   = name;
         this.result = result;
     }
 
-    public AbstractBuild<?, ?> getBuild() {
-        return build;
+    public Run<?, ?> getBuild() {
+        return run;
     }
 
     public String getName() {
@@ -75,17 +75,17 @@ public abstract class AbstractReport implements Serializable, ModelObject {
     }
 
     public void doGraph(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
-        AbstractGraph graph = new MaintainabilityIndexGraph(build, buildTokens, build.getTimestamp(), Constants.TREND_GRAPH_WIDTH, Constants.TREND_GRAPH_HEIGHT);
+        AbstractGraph graph = new MaintainabilityIndexGraph(run, buildTokens, run.getTimestamp(), Constants.TREND_GRAPH_WIDTH, Constants.TREND_GRAPH_HEIGHT);
         graph.doPng(req, rsp);
     }
 
     public void doMaiGraph(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
-        AbstractGraph graph = new MaintainabilityIndexGraph(build, buildTokens, build.getTimestamp(), Constants.REPORT_GRAPH_WIDTH, Constants.REPORT_GRAPH_HEIGHT);
+        AbstractGraph graph = new MaintainabilityIndexGraph(run, buildTokens, run.getTimestamp(), Constants.REPORT_GRAPH_WIDTH, Constants.REPORT_GRAPH_HEIGHT);
         graph.doPng(req, rsp);
     }
 
     public void doCycGraph(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
-        AbstractGraph graph = new CyclomaticComplexityGraph(build, buildTokens, build.getTimestamp(), Constants.REPORT_GRAPH_WIDTH, Constants.REPORT_GRAPH_HEIGHT);
+        AbstractGraph graph = new CyclomaticComplexityGraph(run, buildTokens, run.getTimestamp(), Constants.REPORT_GRAPH_WIDTH, Constants.REPORT_GRAPH_HEIGHT);
         graph.doPng(req, rsp);
     }
 
@@ -95,7 +95,7 @@ public abstract class AbstractReport implements Serializable, ModelObject {
 
     public AbstractBean<?> getPreviousResult() {
         if (previousResult != null) return previousResult;
-        AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+        Run<?, ?> lastBuild = run.getPreviousBuild();
         while (lastBuild != null) {
             if (!lastBuild.isBuilding() && (lastBuild.getAction(VsCodeMetricsBuildAction.class) != null)) {
                 VsCodeMetricsBuildAction action = lastBuild.getAction(VsCodeMetricsBuildAction.class);

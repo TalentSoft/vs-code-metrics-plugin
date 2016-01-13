@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 import org.apache.commons.digester.Digester;
 import org.xml.sax.SAXException;
@@ -75,7 +76,7 @@ public abstract class  CodeMetricsUtil {
      * @param  build
      * @return
      */
-    public static File getReportDir(AbstractBuild<?, ?> build) {
+    public static File getReportDir(Run<?, ?> build) {
         return new File(build.getRootDir(), Constants.REPORT_DIR);
     }
 
@@ -100,7 +101,7 @@ public abstract class  CodeMetricsUtil {
      * @param  build
      * @return
      */
-    public static CodeMetrics getCodeMetrics(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+    public static CodeMetrics getCodeMetrics(Run<?, ?> build) throws IOException, InterruptedException {
         File reportFolder = getReportDir(build);
 
         FilePath[] reports = getReports(reportFolder);
